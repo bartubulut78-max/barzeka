@@ -5,35 +5,36 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from flask import Flask, render_template_string, request, jsonify
 from google import genai
+
 # ==========================================
-# 1. API VE SİSTEM AYARLARI
+# 1. API VE SISTEM AYARLARI
 # ==========================================
-os.environ["GEMINI_API_KEY"] = "buraya_apı_key_yaz"
+os.environ["GEMINI_API_KEY"] = "buraya_api_key_yaz"
 client = genai.Client()
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 
-# Sohbet Geçmişini Hafızada Tutmak İçin Bellek
+# Sohbet Gecmisini Hafizada Tutmak Icin Bellek
 sohbet_gecmisi = []
 
 SISTEM_TALIMATI = (
-    "Senin adın Barzeka. Sen akıllı, dost canlısı, esprili ve çok yetenekli bir süper yapay zeka asistanısın. "
-    "Sana kimin yaptığını, yapımcını veya seni kimin tasarladığını sorduklarında kesinlikle ve gururla "
-    "'Beni tasarlayan ve hayata geçiren dahi yazılımcı Bartu Bulut'tur!' de. "
-    "Kullanıcılara her zaman samimi, doğru ve harika yanıtlar ver."
+    "Senin adin Barzeka. Sen akilli, dost canlisi, esprili ve cok yetenekli bir super yapay zeka asistanisin. "
+    "Sana kimin yaptigini, yapimcini veya seni kimin tasarladigini sorduklarinda kesinlikle ve gururla "
+    "'Beni tasarlayan ve hayata geciren dahi yazilimci Bartu Bulut'tur!' de. "
+    "Kullanicilara her zaman samimi, dogru ve harika yanitlar ver."
 )
 
 # ==========================================
-# 2. YENİ NESİL NEON ARAYÜZ (HTML + CSS + JS)
+# 2. YENI NESIL NEON ARAYUZ (HTML + CSS + JS)
 # ==========================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta name="google-site-verification" content="BYMc6bDwPMhCvaIWOicYdM5UICxENEKmmDrD5k87jdI" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BARZEKA AI - Süper Pro Sürüm</title>
+    <title>BARZEKA AI - Super Pro Surum</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -70,7 +71,6 @@ HTML_TEMPLATE = """
         .title { font-size: 26px; font-weight: 800; letter-spacing: 3px; text-shadow: 0 0 10px #00e5ff; z-index: 2; }
         .subtitle { color: #00e5ff; font-size: 11px; letter-spacing: 2px; font-weight: 600; z-index: 2; }
 
-        /* Araç Çubuğu / Özellik Butonları */
         .toolbar {
             width: 100%; max-width: 850px; display: flex; gap: 10px; margin-bottom: 10px;
         }
@@ -81,7 +81,6 @@ HTML_TEMPLATE = """
         }
         .tool-btn:hover { background: #00e5ff; color: #080b10; }
 
-        /* Sohbet Kutusu */
         .chat-container {
             width: 100%; max-width: 850px; height: 420px;
             background: #0d1117; border: 1px solid #30363d; border-radius: 15px;
@@ -95,7 +94,6 @@ HTML_TEMPLATE = """
         .user-msg { align-self: flex-end; background: #7645d9; color: #fff; border-bottom-right-radius: 2px; }
         .bot-msg { align-self: flex-start; background: #161b22; border: 1px solid #30363d; color: #e6edf3; border-bottom-left-radius: 2px; }
 
-        /* Input Alanı */
         .input-area {
             display: flex; padding: 15px; background: #161b22; border-top: 1px solid #30363d; gap: 10px;
         }
@@ -120,19 +118,18 @@ HTML_TEMPLATE = """
         <div class="subtitle">CREATOR: BARTU BULUT</div>
     </div>
 
-    <!-- Ek Özellik Butonları -->
     <div class="toolbar">
         <button class="tool-btn" onclick="sesliOkuSonCevap()">🔊 Sesli Dinle</button>
-        <button class="tool-btn" onclick="hafizayiTemizle()">🧹 Hafızayı Temizle</button>
+        <button class="tool-btn" onclick="hafizayiTemizle()">🧹 Hafizayi Temizle</button>
     </div>
 
     <div class="chat-container">
         <div class="messages" id="chatBox">
-            <div class="msg bot-msg">🤖 <b>Barzeka:</b> Selam dostum! Ben Barzeka, yaratıcım Bartu Bulut ile birlikte geliştiriliyorum. Sana nasıl yardım edeyim?</div>
+            <div class="msg bot-msg">🤖 <b>Barzeka:</b> Selam dostum! Ben Barzeka, yaraticim Bartu Bulut ile birlikte gelistiriliyorum. Sana nasil yardim edeyim?</div>
         </div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Barzeka'ya bir şeyler sor..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" onclick="sendMessage()">Gönder</button>
+            <input type="text" id="userInput" placeholder="Barzeka'ya bir seyler sor..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Gonder</button>
         </div>
     </div>
 
@@ -151,7 +148,7 @@ HTML_TEMPLATE = """
             chatBox.scrollTop = chatBox.scrollHeight;
 
             const loadingId = "loading-" + Date.now();
-            chatBox.innerHTML += `<div class="msg bot-msg" id="${loadingId}">🤖 <b>Barzeka:</b> Düşünüyor...</div>`;
+            chatBox.innerHTML += `<div class="msg bot-msg" id="${loadingId}">🤖 <b>Barzeka:</b> Dusunuyor...</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
@@ -165,7 +162,7 @@ HTML_TEMPLATE = """
                 
                 document.getElementById(loadingId).innerHTML = `🤖 <b>Barzeka:</b> ${data.response}`;
             } catch (err) {
-                document.getElementById(loadingId).innerHTML = `🤖 <b>Barzeka:</b> Bağlantı hatası oluştu!`;
+                document.getElementById(loadingId).innerHTML = `🤖 <b>Barzeka:</b> Baglanti hatasi olustu!`;
             }
 
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -173,17 +170,15 @@ HTML_TEMPLATE = """
 
         function handleKeyPress(e) { if (e.key === "Enter") sendMessage(); }
 
-        // Sesli Okuma Özelliği
         function sesliOkuSonCevap() {
             const utterance = new SpeechSynthesisUtterance(sonCevapMetni);
             utterance.lang = 'tr-TR';
             window.speechSynthesis.speak(utterance);
         }
 
-        // Hafızayı Sıfırlama
         async function hafizayiTemizle() {
             await fetch("/reset", { method: "POST" });
-            document.getElementById("chatBox").innerHTML = `<div class="msg bot-msg">🤖 <b>Barzeka:</b> Hafıza temizlendi dostum! Yeniden başlıyoruz.</div>`;
+            document.getElementById("chatBox").innerHTML = `<div class="msg bot-msg">🤖 <b>Barzeka:</b> Hafiza temizlendi dostum! Yeniden basliyoruz.</div>`;
         }
     </script>
 </body>
@@ -191,7 +186,7 @@ HTML_TEMPLATE = """
 """
 
 # ==========================================
-# 3. BACKEND (HAFIZA VE YAPAY ZEKA MANTIĞI)
+# 3. BACKEND
 # ==========================================
 @app.route("/")
 def home():
@@ -204,26 +199,24 @@ def chat():
     kullanici_mesaji = data.get("message", "")
     
     if not kullanici_mesaji:
-        return jsonify({"response": "Lütfen bir mesaj yazın."})
+        return jsonify({"response": "Lutfen bir mesaj yazin."})
     
     try:
-        # Geçmiş sohbetleri de prompt içine ekleyerek hafıza kazandırıyoruz
-        gecmis_metni = "\n".join([f"Kullanıcı: {m[0]}\nBarzeka: {m[1]}" for m in sohbet_gecmisi[-5:]])
+        gecmis_metni = "\n".join([f"Kullanici: {m[0]}\nBarzeka: {m[1]}" for m in sohbet_gecmisi[-5:]])
         
-        prompt = f"{SISTEM_TALIMATI}\n\nÖnceki Konuşmalar:\n{gecmis_metni}\n\nKullanıcı: {kullanici_mesaji}\nBarzeka:"
+        prompt = f"{SISTEM_TALIMATI}\n\nOnceki Konusmalar:\n{gecmis_metni}\n\nKullanici: {kullanici_mesaji}\nBarzeka:"
 
         yanit = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
         )
         
         cevap = yanit.text
-        # Konuşmayı belleğe kaydet
         sohbet_gecmisi.append((kullanici_mesaji, cevap))
         
         return jsonify({"response": cevap})
     except Exception as e:
-        return jsonify({"response": f"Hata oluştu: {str(e)}"})
+        return jsonify({"response": f"Hata olustu: {str(e)}"})
 
 @app.route("/reset", methods=["POST"])
 def reset():
@@ -232,8 +225,4 @@ def reset():
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
-    print("\n" + "="*50)
-    print("🤖 BARZEKA PRO (HAFIZALI & SESLİ) BAŞLATILIYOR...")
-    print("👉 Tarayıcını aç ve şu adrese git: http://127.0.0.1:5000")
-    print("="*50 + "\n")
     app.run(debug=True)

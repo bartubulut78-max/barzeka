@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import sys
 import os
+sys.stdout.reconfigure(encoding='utf-8')
+
 from flask import Flask, render_template_string, request, jsonify
 from google import genai
-
 # ==========================================
 # 1. API VE SİSTEM AYARLARI
 # ==========================================

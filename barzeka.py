@@ -5,12 +5,16 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from flask import Flask, render_template_string, request, jsonify
 from google import genai
+import os
+import requests
+from flask import Flask, render_template, request, jsonify
+from google import genai
 
 # ==========================================
 # 1. API VE SISTEM AYARLARI
 # ==========================================
-os.environ["GEMINI_API_KEY"] = "buraya_api_key_yaz"
-client = genai.Client()
+api_key = os.environ.get("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False

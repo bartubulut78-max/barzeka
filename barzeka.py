@@ -27,6 +27,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<meta name="google-site-verification" content="BYMc6bDwPMhCvaIWOicYdM5UICxENEKmmDrD5k87jdI" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BARZEKA AI - Süper Pro Sürüm</title>
